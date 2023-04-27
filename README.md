@@ -21,5 +21,6 @@ Args:
     user (str): Your SQL Server username
     password (str): Your SQL Server password
     database_name (str): The name of the database to analyse
+    schema (str): The schema for the database tables to analyse
     output_file_name (str): The output file name of the report
 ```

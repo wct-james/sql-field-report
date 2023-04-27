@@ -182,7 +182,7 @@ def review_column(file: str, data: pd.DataFrame, column: str):
     return analysis
 
 
-def analyze_file(table: str, conn):
+def analyze_file(table: str, schema: str, conn):
     """
     Take in a file path and return an overview of the shape of that file
 
@@ -193,14 +193,14 @@ def analyze_file(table: str, conn):
     Tuple: file_shape - a tuple of tuples containing the file name, field name, row count for each field
     """
 
-    data = pd.read_sql(text(f"SELECT * FROM [{table}]"), conn)
+    data = pd.read_sql(text(f"SELECT * FROM [{schema}].[{table}]"), conn)
 
     file_shape = tuple((review_column(table, data, h) for h in data.columns))
 
     return file_shape
 
 
-def analyze_files(objects: list, conn) -> pd.DataFrame:
+def analyze_files(objects: list, schema:str, conn) -> pd.DataFrame:
     """
     Analyze Files
 
@@ -212,7 +212,7 @@ def analyze_files(objects: list, conn) -> pd.DataFrame:
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_file(l, conn) for l in objects)
+    data_shapes = tuple(analyze_file(l, schema, conn) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))
@@ -233,7 +233,7 @@ def analyze_files(objects: list, conn) -> pd.DataFrame:
     return analysis
 
 
-def build_field_report(output_file_name: str, objects: list, conn):
+def build_field_report(output_file_name: str, objects: list, schema:str, conn):
     """
     Build field report
 
@@ -267,7 +267,7 @@ def build_field_report(output_file_name: str, objects: list, conn):
 
     file_path = os.path.join(output_file_name)
 
-    analysis = analyze_files(objects, conn)
+    analysis = analyze_files(objects, schema, conn)
     # analysis.to_excel(file_path)
 
     oddFill = PatternFill(start_color="DCE6F1", end_color="DCE6F1", fill_type="solid")
@@ -345,6 +345,7 @@ def MSSQL_Database_Report(
     user: str,
     password: str,
     database_name: str,
+    schema:str, 
     output_file_name: str,
 ):
     """MSSQL Database Report
@@ -357,6 +358,7 @@ def MSSQL_Database_Report(
         user (str): Your SQL Server username
         password (str): Your SQL Server password
         database_name (str): The name of the database to analyse
+        schema (str): The schema for the database tables to analyse
         output_file_name (str): The output file name of the report
     """
 
@@ -367,7 +369,7 @@ def MSSQL_Database_Report(
         objects = pd.read_sql(
             text("SELECT DISTINCT(TABLE_NAME) FROM INFORMATION_SCHEMA.COLUMNS"), conn
         )["TABLE_NAME"].to_list()
-        build_field_report(output_file_name, objects, conn)
+        build_field_report(output_file_name, objects, schema, conn)
 
 
 if __name__ == "__main__":
