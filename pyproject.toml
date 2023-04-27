@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "sql-field-report"
+version = "0.1.0"
+description = ""
+authors = ["Will James <willj@dealcloud.com>"]
+readme = "README.md"
+packages = [{include = "sql_field_report"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.0.1"
+openpyxl = "^3.1.2"
+sqlalchemy = "^2.0.11"
+python-dotenv = "^1.0.0"
+regex = "^2023.3.23"
+pyodbc = "^4.0.39"
+typer = {extras = ["all"], version = "^0.7.0"}
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+isort = "^5.12.0"
+
+[tool.poetry.scripts]
+database-report = "sql_field_report.sql_field_report:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
