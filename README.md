@@ -6,6 +6,10 @@ To install use pip:
 
 ## Usage
 
+SQL Field Report is a [Typer](https://github.com/tiangolo/typer) CLI tool to see the available functions run:
+
+`sql-field-report --help`
+
 ```
 MSSQL Database Report
 
