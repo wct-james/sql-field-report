@@ -192,10 +192,12 @@ def analyze_file(table: str, schema: str, conn):
     Returns:
     Tuple: file_shape - a tuple of tuples containing the file name, field name, row count for each field
     """
+    try:
+        data = pd.read_sql(text(f"SELECT * FROM [{schema}].[{table}]"), conn)
 
-    data = pd.read_sql(text(f"SELECT * FROM [{schema}].[{table}]"), conn)
-
-    file_shape = tuple((review_column(table, data, h) for h in data.columns))
+        file_shape = tuple((review_column(table, data, h) for h in data.columns))
+    except:
+        file_shape = tuple(((table, 'ERROR', 0, 0, 0, 'ERROR')))
 
     return file_shape
 
