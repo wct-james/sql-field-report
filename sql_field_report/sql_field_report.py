@@ -197,7 +197,8 @@ def analyze_file(table: str, schema: str, conn):
 
         file_shape = tuple((review_column(table, data, h) for h in data.columns))
     except:
-        file_shape = tuple(((table, 'ERROR', 0, 0, 0, 'ERROR')))
+        data = pd.DataFrame.from_records(data=[['ERROR', 'ERROR']], columns = ['ERROR', 'ERROR2'])
+        file_shape = tuple((review_column(table, data, h) for h in data.columns))
 
     return file_shape
 
