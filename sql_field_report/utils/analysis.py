@@ -1,9 +1,11 @@
 from typing import Callable
 
+import logging
 import pandas as pd
 import regex as re
 from sqlalchemy import text
 
+logger = logging.getLogger(__name__)
 
 def most_common(lst):
     """
@@ -113,17 +115,11 @@ def review_column(file: str, data: pd.DataFrame, column: str):
 
         datatype = most_common(types)
 
-        choices = (
-            "; ".join(set(map(str, values))) if datatype == "Choice/Reference" else None
-        )
-
         analysis = (file, column, length, populated, unique, datatype)
-        # analysis = (file, column, length, populated, unique, datatype, choices)
 
-        print("Analyzed: {}".format(str(analysis)))
+        logger.info("Analyzed: {}".format(str(analysis)))
 
     else:
-        # analysis = (file, column, 0, 0, 0, "EMPTY", None)
         analysis = (file, column, 0, 0, 0, "EMPTY")
 
     return analysis
@@ -222,7 +218,7 @@ def analyze_dataframes(
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_sql_table(l, get_data) for l in objects)
+    data_shapes = tuple(analyze_dataframe(l, get_data) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))

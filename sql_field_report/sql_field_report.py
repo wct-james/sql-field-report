@@ -1,11 +1,13 @@
 from typing import Callable
 
+import logging
+import coloredlogs
 import pandas as pd
 import typer
 from sqlalchemy import text
-from utils.analysis import analyze_dataframes, analyze_sql_tables
-from utils.databases import MSSQLConnection
-from utils.excel import generate_excel_report
+from .utils.analysis import analyze_dataframes, analyze_sql_tables
+from .utils.databases import MSSQLConnection
+from .utils.excel import generate_excel_report
 
 
 def build_sql_field_report(output_file_name: str, objects: list, schema: str, conn):
@@ -54,6 +56,12 @@ def build_dataframe_field_report(
     else:
         return None
 
+
+logger = logging.getLogger(__name__)
+coloredlogs.install()
+logging.basicConfig(
+    level='INFO'
+)
 
 app = typer.Typer()
 

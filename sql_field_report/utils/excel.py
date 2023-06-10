@@ -1,8 +1,10 @@
+import logging
 import pandas as pd
 from openpyxl.styles import Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
+logger = logging.getLogger(__name__)
 
 def generate_excel_report(analysis: pd.DataFrame, file_path: str) -> str:
     """Generate an excel data report
@@ -14,6 +16,8 @@ def generate_excel_report(analysis: pd.DataFrame, file_path: str) -> str:
     Returns:
         str: the filepath of the produced excel
     """
+    
+    logger.info("Generating Excel Report...")
 
     try:
         oddFill = PatternFill(
@@ -68,13 +72,6 @@ def generate_excel_report(analysis: pd.DataFrame, file_path: str) -> str:
                 if i + 1 == 1:
                     pass
                 else:
-                    print(
-                        "{}: {} -> {}".format(
-                            ws["B{}".format(i + 1)].value,
-                            ws["A{}".format(i + 1)].value,
-                            ws["A{}".format(i)].value,
-                        )
-                    )
                     if ws["A{}".format(i + 1)].value != ws["A{}".format(i)].value:
                         even = not even
                     for cell in row:
@@ -82,7 +79,10 @@ def generate_excel_report(analysis: pd.DataFrame, file_path: str) -> str:
 
             ws.add_table(field_report_table)
 
+        logger.info("Excel Report Generated")
+
         return file_path
 
-    except:
+    except Exception as e:
+        logger.error(f"Excel Report Generation Failed: {e}")
         return None
