@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sql-field-report"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 authors = ["Will James <willj@dealcloud.com>"]
 readme = "README.md"
@@ -16,6 +16,7 @@ regex = "^2023.3.23"
 pyodbc = "^4.0.39"
 typer = {extras = ["all"], version = "^0.7.0"}
 coloredlogs = "^15.0.1"
+mysql-connector-python = "^8.0.33"
 
 
 [tool.poetry.group.dev.dependencies]

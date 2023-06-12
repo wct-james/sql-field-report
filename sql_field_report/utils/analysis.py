@@ -1,11 +1,13 @@
+import logging
 from typing import Callable
 
-import logging
 import pandas as pd
 import regex as re
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
+
 
 def most_common(lst):
     """
@@ -125,7 +127,7 @@ def review_column(file: str, data: pd.DataFrame, column: str):
     return analysis
 
 
-def analyze_sql_table(table: str, schema: str, conn):
+def analyze_sql_table(table: str, conn: Connection):
     """
     Take in a file path and return an overview of the shape of that file
 
@@ -136,7 +138,7 @@ def analyze_sql_table(table: str, schema: str, conn):
     Tuple: file_shape - a tuple of tuples containing the file name, field name, row count for each field
     """
     try:
-        data = pd.read_sql(text(f"SELECT * FROM [{schema}].[{table}]"), conn)
+        data = pd.read_sql(text(f"SELECT * FROM {table}"), conn)
 
         file_shape = tuple((review_column(table, data, h) for h in data.columns))
     except:
@@ -171,7 +173,7 @@ def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tu
     return file_shape
 
 
-def analyze_sql_tables(objects: list, schema: str, conn) -> pd.DataFrame:
+def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
     """
     Analyze SQL Tables
 
@@ -183,7 +185,7 @@ def analyze_sql_tables(objects: list, schema: str, conn) -> pd.DataFrame:
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_sql_table(l, schema, conn) for l in objects)
+    data_shapes = tuple(analyze_sql_table(l, conn) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))
