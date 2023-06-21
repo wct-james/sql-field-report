@@ -1,8 +1,13 @@
 import logging
 from typing import Callable
 
+import time
+
 import pandas as pd
+from multiprocessing import Pool
+import traceback
 import regex as re
+import sys
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
@@ -85,22 +90,23 @@ def get_choice_flag(distinct_count, choice_ratio, count) -> bool:
         return False
 
 
-def review_column(file: str, data: pd.DataFrame, column: str):
+def review_column(column_data: tuple[str, str, pd.Series]):
     """
     Review a column of data in a data set to return field report metadata
 
     Params:
     str: file - The source file/table
-    pd.DataFrame: data - the data
-    str: column - the column being analyzed
+    tuple[str, pd.Series]: column - a tuple containing the column name and the column in a pd.Series
 
     Return:
     tuple: analysis - the column analysis
     """
 
+    file, column, data = column_data
+
     if data.shape[0] != 0:
         length = len(data)
-        values = data[column].dropna().to_list()
+        values = data.dropna().to_list()
         populated = len(values)
         unique = len(set(values))
 
@@ -111,7 +117,7 @@ def review_column(file: str, data: pd.DataFrame, column: str):
 
         choice_flag = get_choice_flag(unique, choice_ratio, length)
 
-        values = data[column].to_list()
+        values = data.to_list()
 
         types = list([estimate_dealcloud_datatype(v, choice_flag) for v in set(values)])
 
@@ -127,6 +133,18 @@ def review_column(file: str, data: pd.DataFrame, column: str):
     return analysis
 
 
+def get_series(table: str, data: pd.DataFrame) -> list[tuple[str, pd.Series]]:
+    """Accepts a dataframe and returns a list of series
+
+    Args:
+        data (pd.DataFrame): Dataframe to be broken down
+
+    Returns:
+        list[pd.Series]: List of series for each dataframe column
+    """
+    return list([(table, c, data[c]) for c in data.columns])
+
+
 def analyze_sql_table(table: str, conn: Connection):
     """
     Take in a file path and return an overview of the shape of that file
@@ -140,12 +158,16 @@ def analyze_sql_table(table: str, conn: Connection):
     try:
         data = pd.read_sql(text(f"SELECT * FROM {table}"), conn)
 
-        file_shape = tuple((review_column(table, data, h) for h in data.columns))
+        data = get_series(table, data)
+
+        with Pool() as p:
+            file_shape = p.map(review_column, data)
     except:
         data = pd.DataFrame.from_records(
             data=[["ERROR", "ERROR"]], columns=["ERROR", "ERROR2"]
         )
-        file_shape = tuple((review_column(table, data, h) for h in data.columns))
+        data = get_series(data)
+        file_shape = tuple((review_column(h) for h in data))
 
     return file_shape
 
@@ -162,14 +184,17 @@ def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tu
     """
     try:
         data = get_data(table)
+        data = get_series(table, data)
 
-        file_shape = tuple((review_column(table, data, h) for h in data.columns))
+        with Pool() as p:
+            file_shape = p.map(review_column, data)
     except:
+        traceback.print_exc()
         data = pd.DataFrame.from_records(
             data=[["ERROR", "ERROR"]], columns=["ERROR", "ERROR2"]
         )
-        file_shape = tuple((review_column(table, data, h) for h in data.columns))
-
+        data = get_series(data)
+        file_shape = tuple((review_column(h) for h in data))
     return file_shape
 
 
