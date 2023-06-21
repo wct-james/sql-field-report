@@ -221,50 +221,62 @@ def analyze_data(table: str, get_data: Callable[[str], pl.DataFrame]) -> tuple:
     """
     res = []
     data = get_data(table)
+    if isinstance(table, tuple):
+        table = table[0]
     length = data.shape[0]
-    for i in data.columns:
-        res.append(
-            data.select(pl.col(i).value_counts(sort=True)).select(
+    report = []
+    if length != 0:
+        for i in data.columns:
+            res.append(
+                data.select(pl.col(i).value_counts(sort=True)).select(
+                    [
+                        pl.col(i).struct.field(i),
+                        pl.col(i).struct.field("counts"),
+                    ]
+                )
+            )
+
+        for i in res:
+            column = i.columns[0]
+            if i.dtypes[0] == pl.Utf8:
+                e = i.filter(pl.col(column) == "").select(pl.col("counts"))
+                if e.shape[0] > 0:
+                    empty = e.rows(named=True)[0].get("counts")
+                else:
+                    empty = 0
+            elif i.dtypes[0] in pl.INTEGER_DTYPES or i.dtypes[0] in pl.FLOAT_DTYPES:
+                e = i.filter(pl.col(column).is_null()).select(pl.col("counts"))
+                if e.shape[0] > 0:
+                    empty = e.rows(named=True)[0].get("counts")
+                else:
+                    empty = 0
+            else:
+                print(i.dtypes[0])
+                empty = 0
+            populated = length - empty
+            unique = i.shape[0]
+            choice_ratio = float(unique) / float(length)
+            choice_flag = get_choice_flag(unique, choice_ratio, length)
+
+            types = list(
                 [
-                    pl.col(i).struct.field(i),
-                    pl.col(i).struct.field("counts"),
+                    estimate_dealcloud_datatype(v, choice_flag)
+                    for v in i.select(pl.col(column))
                 ]
             )
-        )
+            datatype = most_common(types)
 
-    # print(length)
-    report = []
-    for i in res:
-        column = i.columns[0]
-        if i.dtypes[0] == pl.Utf8:
-            e = i.filter(pl.col(column) == "").select(pl.col("counts"))
-            if e.shape[0] > 0:
-                empty = e.rows(named=True)[0].get("counts")
-            else:
-                empty = 0
-        elif i.dtypes[0] in pl.INTEGER_DTYPES or i.dtypes[0] in pl.FLOAT_DTYPES:
-            e = i.filter(pl.col(column).is_null()).select(pl.col("counts"))
-            if e.shape[0] > 0:
-                empty = e.rows(named=True)[0].get("counts")
-            else:
-                empty = 0
-        else:
-            print(i.dtypes[0])
-            empty = 0
-        populated = length - empty
-        unique = i.shape[0]
-        choice_ratio = float(unique) / float(length)
-        choice_flag = get_choice_flag(unique, choice_ratio, length)
+            logger.info("Analyzed: {}".format(str((table, column, length, populated, unique, datatype))))
 
-        types = list(
-            [
-                estimate_dealcloud_datatype(v, choice_flag)
-                for v in i.select(pl.col(column))
-            ]
-        )
-        datatype = most_common(types)
+            report.append((table, column, length, populated, unique, datatype))
+    else:
+        for i in data.columns:
+            column = i
+            populated = 0
+            unique = 0
+            datatype = "EMPTY"
 
-        report.append((table, column, length, populated, unique, datatype))
+            report.append((table, column, length, populated, unique, datatype))
 
     return report
 
