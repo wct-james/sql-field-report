@@ -3,8 +3,10 @@ from pathlib import Path
 
 import cchardet as chardet
 import pandas as pd
+import polars as pl
 
 from sql_field_report import build_dataframe_field_report
+
 
 
 def check_encoding(filename: str):
@@ -25,10 +27,24 @@ def read_file(file: str) -> pd.DataFrame:
     else:
         return pd.read_excel(file)
 
+def read_file_polars(file: str) -> pl.DataFrame:
+    if file.endswith(".csv"):
+        encoding = check_encoding(file)
+        return pl.read_csv(file, encoding=encoding, infer_schema_length=1000000)
+    else:
+        return pl.read_excel(file)
 
-def test_dataframe_field_report():
+
+# def test_dataframe_field_report():
+#     files = list([os.path.join("data", i) for i in os.listdir("data")])
+
+#     build_dataframe_field_report(
+#         os.path.join("test_output", "Field_Report.xlsx"), files, read_file
+#     )
+
+def test_polars_report():
     files = list([os.path.join("data", i) for i in os.listdir("data")])
 
     build_dataframe_field_report(
-        os.path.join("test_output", "Field_Report.xlsx"), files, read_file
+        os.path.join("test_output", "Field_Report.xlsx"), files, read_file_polars
     )

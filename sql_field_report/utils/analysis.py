@@ -1,8 +1,6 @@
 import logging
-import sys
-import time
 import traceback
-from multiprocessing import Pool
+import polars as pl
 from typing import Callable
 
 import pandas as pd
@@ -170,6 +168,22 @@ def analyze_sql_table(table: str, conn: Connection):
     return file_shape
 
 
+def get_sql_polars(arg: tuple[str, Connection]) -> pl.DataFrame:
+    """
+    Take in a file path and return an overview of the shape of that file
+
+    Params:
+    str: table - the database table to query
+
+    Returns:
+    Tuple: file_shape - a tuple of tuples containing the file name, field name, row count for each field
+    """
+    table, conn = arg
+    data = pl.from_pandas(pd.read_sql(text(f"SELECT * FROM {table}"), conn))
+
+    return data
+
+
 def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tuple:
     """Analyze a dataframe
 
@@ -195,6 +209,66 @@ def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tu
     return file_shape
 
 
+def analyze_data(table: str, get_data: Callable[[str], pl.DataFrame]) -> tuple:
+    """Analyze data
+
+    Args:
+        table (str): the object/table name - will be passed to the get_data function
+        get_data (Callable[[str], pl.DataFrame]):  A function that will take in a table name and return a Dataframe
+
+    Returns:
+        tuple: A tuple describing the shape of the data
+    """
+    res = []
+    data = get_data(table)
+    length = data.shape[0]
+    for i in data.columns:
+        res.append(
+            data.select(pl.col(i).value_counts(sort=True)).select(
+                [
+                    pl.col(i).struct.field(i),
+                    pl.col(i).struct.field("counts"),
+                ]
+            )
+        )
+
+    # print(length)
+    report = []
+    for i in res:
+        column = i.columns[0]
+        if i.dtypes[0] == pl.Utf8:
+            e = i.filter(pl.col(column) == "").select(pl.col("counts"))
+            if e.shape[0] > 0:
+                empty = e.rows(named=True)[0].get("counts")
+            else:
+                empty = 0
+        elif i.dtypes[0] in pl.INTEGER_DTYPES or i.dtypes[0] in pl.FLOAT_DTYPES:
+            e = i.filter(pl.col(column).is_null()).select(pl.col("counts"))
+            if e.shape[0] > 0:
+                empty = e.rows(named=True)[0].get("counts")
+            else:
+                empty = 0
+        else:
+            print(i.dtypes[0])
+            empty = 0
+        populated = length - empty
+        unique = i.shape[0]
+        choice_ratio = float(unique) / float(length)
+        choice_flag = get_choice_flag(unique, choice_ratio, length)
+
+        types = list(
+            [
+                estimate_dealcloud_datatype(v, choice_flag)
+                for v in i.select(pl.col(column))
+            ]
+        )
+        datatype = most_common(types)
+
+        report.append((table, column, length, populated, unique, datatype))
+
+    return report
+
+
 def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
     """
     Analyze SQL Tables
@@ -207,7 +281,8 @@ def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_sql_table(l, conn) for l in objects)
+    # data_shapes = tuple(analyze_sql_table(l, conn) for l in objects)
+    data_shapes = tuple(analyze_data((l, conn), get_sql_polars) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))
@@ -243,6 +318,41 @@ def analyze_dataframes(
     """
 
     data_shapes = tuple(analyze_dataframe(l, get_data) for l in objects)
+
+    # flatten tuple
+    data_shapes = tuple((element for t in data_shapes for element in t))
+
+    analysis = pd.DataFrame(
+        data=data_shapes,
+        columns=[
+            "Table/File",
+            "Field",
+            "Count",
+            "Populated",
+            "Unique",
+            "Datatype",
+            # "Choices",
+        ],
+    )
+
+    return analysis
+
+
+def analyze_polars_dataframes(
+    objects: list, get_data: Callable[[str], pl.DataFrame]
+) -> pd.DataFrame:
+    """
+    Analyze Files
+
+    Params:
+    list db_tables - list of database tables
+    conn - sql server connection
+
+    Returns:
+    pd.DataFrame: analysis - a summary of all files, fields and their row counts
+    """
+
+    data_shapes = tuple(analyze_data(l, get_data) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))
