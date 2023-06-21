@@ -165,7 +165,7 @@ def analyze_sql_table(table: str, conn: Connection):
         data = pd.DataFrame.from_records(
             data=[["ERROR", "ERROR"]], columns=["ERROR", "ERROR2"]
         )
-        data = get_series(data)
+        data = get_series(table, data)
         file_shape = tuple((review_column(h) for h in data))
 
     return file_shape
@@ -192,7 +192,7 @@ def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tu
         data = pd.DataFrame.from_records(
             data=[["ERROR", "ERROR"]], columns=["ERROR", "ERROR2"]
         )
-        data = get_series(data)
+        data = get_series(table, data)
         file_shape = tuple((review_column(h) for h in data))
     return file_shape
 
