@@ -159,8 +159,7 @@ def analyze_sql_table(table: str, conn: Connection):
 
         data = get_series(table, data)
 
-        with Pool() as p:
-            file_shape = p.map(review_column, data)
+        file_shape = tuple((review_column(h) for h in data))
     except:
         data = pd.DataFrame.from_records(
             data=[["ERROR", "ERROR"]], columns=["ERROR", "ERROR2"]
@@ -185,8 +184,7 @@ def analyze_dataframe(table: str, get_data: Callable[[str], pd.DataFrame]) -> tu
         data = get_data(table)
         data = get_series(table, data)
 
-        with Pool() as p:
-            file_shape = p.map(review_column, data)
+        file_shape = tuple((review_column(h) for h in data))
     except:
         traceback.print_exc()
         data = pd.DataFrame.from_records(
