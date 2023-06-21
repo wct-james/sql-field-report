@@ -1,8 +1,11 @@
 import os
-from sql_field_report import build_dataframe_field_report
 from pathlib import Path
+
 import cchardet as chardet
 import pandas as pd
+
+from sql_field_report import build_dataframe_field_report
+
 
 def check_encoding(filename: str):
     filepath = Path(filename)
@@ -24,6 +27,8 @@ def read_file(file: str) -> pd.DataFrame:
 
 
 def test_dataframe_field_report():
-    files = list([os.path.join('data', i) for i in os.listdir('data')])
+    files = list([os.path.join("data", i) for i in os.listdir("data")])
 
-    build_dataframe_field_report(os.path.join('test_output', 'Field_Report.xlsx'), files, read_file)
+    build_dataframe_field_report(
+        os.path.join("test_output", "Field_Report.xlsx"), files, read_file
+    )

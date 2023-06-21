@@ -1,13 +1,12 @@
 import logging
+import sys
+import time
+import traceback
+from multiprocessing import Pool
 from typing import Callable
 
-import time
-
 import pandas as pd
-from multiprocessing import Pool
-import traceback
 import regex as re
-import sys
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 

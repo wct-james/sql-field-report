@@ -4,7 +4,7 @@ from typing import Callable
 import coloredlogs
 import pandas as pd
 import typer
-from sqlalchemy import text, Connection
+from sqlalchemy import Connection, text
 
 from .utils.analysis import analyze_dataframes, analyze_sql_tables
 from .utils.databases import MSSQLConnection, MySQLConnection
