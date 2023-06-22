@@ -96,6 +96,7 @@ def MSSQL_Database_Report(
     user: str,
     password: str,
     database_name: str,
+    schema: str,
     output_file_name: str,
 ):
     """MSSQL Database Report
@@ -108,6 +109,7 @@ def MSSQL_Database_Report(
         user (str): Your SQL Server username
         password (str): Your SQL Server password
         database_name (str): The name of the database to analyse
+        schema (str): The database schema to analyse
         output_file_name (str): The output file name of the report
     """
 
@@ -117,7 +119,7 @@ def MSSQL_Database_Report(
     with MSSQLConnection(server, port, user, password, database_name) as conn:
         objects = pd.read_sql(
             text(
-                "SELECT DISTINCT('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') [TABLE_NAME] FROM INFORMATION_SCHEMA.COLUMNS"
+                "SELECT DISTINCT('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') [TABLE_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='{}'".format(schema)
             ),
             conn,
         )["TABLE_NAME"].to_list()
