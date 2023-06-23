@@ -4,6 +4,7 @@ import cchardet as chardet
 import pandas as pd
 import polars as pl
 
+
 def check_encoding(filename: str):
     filepath = Path(filename)
 
@@ -21,6 +22,7 @@ def read_file_pandas(file: str) -> pd.DataFrame:
         return pd.read_csv(file, encoding=encoding, low_memory=False)
     else:
         return pd.read_excel(file)
+
 
 def read_file(file: str) -> pl.DataFrame:
     if file.endswith(".csv"):
