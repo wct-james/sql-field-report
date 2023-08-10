@@ -110,6 +110,7 @@ def get_sql_polars(arg: tuple[str, Connection]) -> pl.DataFrame:
     Tuple: file_shape - a tuple of tuples containing the file name, field name, row count for each field
     """
     table, conn = arg
+    # determine counts for abridged analysis
     data = pl.from_pandas(pd.read_sql(text(f"SELECT * FROM {table}"), conn))
 
     return data
