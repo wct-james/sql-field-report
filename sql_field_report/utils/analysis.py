@@ -116,7 +116,9 @@ def get_sql_polars(arg: tuple[str, Connection]) -> pl.DataFrame:
     return data
 
 
-def analyze_data(table: str, get_data: Callable[[str], pl.DataFrame]) -> tuple:
+def analyze_data(
+    table: str, get_data: Callable[[str], pl.DataFrame], cnx: str = None
+) -> tuple:
     """Analyze data
 
     Args:
@@ -126,8 +128,12 @@ def analyze_data(table: str, get_data: Callable[[str], pl.DataFrame]) -> tuple:
     Returns:
         tuple: A tuple describing the shape of the data
     """
+    logger.info(f"Analysing {table}...")
     res = []
-    data = get_data(table)
+    if cnx:
+        data = get_data(table, cnx)
+    else:
+        data = get_data(table)
     if isinstance(table, tuple):
         table = table[0]
     length = data.shape[0]
@@ -187,11 +193,12 @@ def analyze_data(table: str, get_data: Callable[[str], pl.DataFrame]) -> tuple:
                 )
                 datatype = most_common(types)
 
-            logger.info(
-                "Analyzed: {}".format(
-                    str((table, column, length, populated, unique, datatype))
-                )
-            )
+            # logger.info(
+
+            #     "Analyzed: {}".format(
+            #         str((table, column, length, populated, unique, datatype))
+            #     )
+            # )
 
             report.append((table, column, length, populated, unique, datatype))
     else:
@@ -241,7 +248,7 @@ def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
 
 
 def analyze_polars_dataframes(
-    objects: list, get_data: Callable[[str], pl.DataFrame]
+    objects: list, get_data: Callable[[str], pl.DataFrame], cnx: str = None
 ) -> pd.DataFrame:
     """
     Analyze Files
@@ -254,7 +261,7 @@ def analyze_polars_dataframes(
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_data(l, get_data) for l in objects)
+    data_shapes = tuple(analyze_data(l, get_data, cnx) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))

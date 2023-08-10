@@ -2,13 +2,14 @@ import logging
 from typing import Callable
 
 import coloredlogs
+import connectorx as cx
 import pandas as pd
 import polars as pl
 import typer
 from sqlalchemy import Connection, text
 
 from .utils.analysis import analyze_polars_dataframes, analyze_sql_tables
-from .utils.databases import MSSQLConnection, MySQLConnection
+from .utils.databases import MSSQLConnection, MSSQLConnectionX, MySQLConnection
 from .utils.excel import generate_excel_report
 
 
@@ -34,8 +35,58 @@ def build_sql_field_report(output_file_name: str, objects: list, conn: Connectio
         return None
 
 
+def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
+    """Get MSSQL Data
+
+    Using connectx, query data from a given SQL table
+
+    Args:
+        table (str): Database table name
+        cnx (str): connectx connection string
+
+    Returns:
+        pl.DataFrame: Table data
+    """
+    # get number of rows
+    counts = (
+        cx.read_sql(cnx, f"SELECT COUNT(*) [c] FROM {table}", return_type="polars")
+        .select(pl.col("c"))
+        .to_series()
+        .to_list()[0]
+    )
+    logger.info(f"Table {table} has: {counts} rows...")
+
+    # get columns with valid datatypes
+    t = table.split("].[")[1][:-1]
+    cols = (
+        cx.read_sql(
+            cnx,
+            f"SELECT DISTINCT('[' + COLUMN_NAME + ']') [COLUMN_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{t}' AND DATA_TYPE != 'sql_variant'",
+            return_type="polars",
+        )
+        .select(pl.col("COLUMN_NAME"))
+        .to_series()
+        .to_list()
+    )
+    print(cols)
+
+    columns = ", ".join(cols)
+
+    if counts > 100000:
+        logger.info(f"Table {table} -- abbreviating to top 50000")
+        query = f"SELECT TOP(50000) {columns} FROM {table}"
+    else:
+        query = f"SELECT {columns} FROM {table}"
+    data = cx.read_sql(cnx, query, return_type="polars")
+    logger.info(f"Table {table} data pulled.")
+    return data
+
+
 def build_dataframe_field_report(
-    output_file_name: str, objects: list, get_data: Callable[[str], pl.DataFrame]
+    output_file_name: str,
+    objects: list,
+    get_data: Callable[[str], pl.DataFrame],
+    cnx: str = None,
 ):
     """Build DataFrames Field Report
 
@@ -48,10 +99,18 @@ def build_dataframe_field_report(
         str: SQL Report filepath
     """
 
-    analysis = analyze_polars_dataframes(objects, get_data)
+    analysis = analyze_polars_dataframes(objects, get_data, cnx)
 
     path = generate_excel_report(analysis, output_file_name)
 
+    if path:
+        return path
+    else:
+        return None
+
+
+def build_mssql_field_report(output_file_name: str, objects: list, cnx: str):
+    path = build_dataframe_field_report(output_file_name, objects, get_mssql_data, cnx)
     if path:
         return path
     else:
@@ -92,16 +151,33 @@ def MSSQL_Database_Report(
     if not output_file_name.endswith(".xlsx"):
         output_file_name = "{}.xlsx".format(output_file_name.split(".")[0])
 
-    with MSSQLConnection(server, port, user, password, database_name) as conn:
-        objects = pd.read_sql(
-            text(
-                "SELECT DISTINCT('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') [TABLE_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='{}'".format(
-                    schema
-                )
-            ),
-            conn,
-        )["TABLE_NAME"].to_list()
-        build_sql_field_report(output_file_name, objects, conn)
+    with MSSQLConnectionX(server, port, user, password, database_name) as cnx:
+        objects = (
+            cx.read_sql(
+                cnx,
+                f"""
+SELECT DISTINCT
+	('[' + s.name + '].[' + t.name + ']') [TABLE_NAME]
+FROM 
+    sys.tables t
+INNER JOIN 
+    sys.partitions p ON t.object_id = p.OBJECT_ID 
+INNER JOIN
+	sys.schemas s ON t.schema_id = s.schema_id
+WHERE 
+    t.NAME NOT LIKE 'dt%' 
+    AND s.name = '{schema}'
+    AND t.is_ms_shipped = 0
+    AND p.rows != 0
+                """,
+                return_type="polars",
+            )
+            .select(pl.col("TABLE_NAME"))
+            .to_series()
+            .to_list()
+        )
+
+        build_mssql_field_report(output_file_name, objects, cnx)
 
 
 @app.command()

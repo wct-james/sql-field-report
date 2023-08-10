@@ -58,3 +58,6 @@ build_dataframe_field_report(
 )
 
 ```
+
+## TODO
+- Improve SQL read speeds by incorporating [connector-x](https://github.com/sfu-db/connector-x), rather than `pd.read_sql`.
