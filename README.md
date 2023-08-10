@@ -1,5 +1,6 @@
 # SQL Field Report
 
+[![Downloads](https://static.pepy.tech/badge/sql-field-report)](https://pepy.tech/project/sql-field-report)
 ## Installation
 To install use pip:
 `pip install sql-field-report`
