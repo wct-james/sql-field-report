@@ -59,6 +59,26 @@ class MSSQLConnection(DBConnection):
         self.engine.dispose()
 
 
+class MSSQLConnectionX(DBConnection):
+    """Provides an MSSQL Connection
+
+    Parameters:
+        server (str): The server name/address
+        port (int): The server port
+        user (str): The username
+        password (str): The passowrd
+        db_name (str): The name of the database
+    """
+
+    def __enter__(self):
+        self.connection_string = f"mssql://{self._user}:{self._password}@{self._server}:{self._port}/{self._db_name}"
+
+        return self.connection_string
+
+    def __exit__(self, type, value, traceback):
+        self.connection_string = ""
+
+
 class MySQLConnection(DBConnection):
     """Provides an MySQL Connection
 
