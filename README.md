@@ -1,4 +1,5 @@
 # SQL Field Report
+Author: [Will James](https://github.com/wct-james)
 
 [![Downloads](https://static.pepy.tech/badge/sql-field-report)](https://pepy.tech/project/sql-field-report)
 ## Installation
