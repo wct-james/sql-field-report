@@ -1,3 +1,9 @@
+## 1.0.17 (2023-08-11)
+
+### Fix
+
+- **sql_field_report.py**: suppress printing of query columns
+
 ## 1.0.16 (2023-08-10)
 
 ### Feat
