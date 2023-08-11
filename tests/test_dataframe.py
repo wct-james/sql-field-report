@@ -6,6 +6,9 @@ from sqlalchemy import text
 from sql_field_report import build_dataframe_field_report, build_sql_field_report
 from sql_field_report.utils.databases import MSSQLConnection
 from sql_field_report.utils.file_utils import read_file
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def test_polars_report():
@@ -18,7 +21,11 @@ def test_polars_report():
 
 def test_sql_report():
     with MSSQLConnection(
-        "10.64.0.31", 1433, "sa", "yourStrong(!)Password", "LLCP"
+        os.getenv("SERVER"),
+        os.getenv("PORT"),
+        os.getenv("USER"),
+        os.getenv("SQL_SERVER_PASSWORD"),
+        os.getenv("DATABASE"),
     ) as conn:
         objects = pd.read_sql(
             text(
