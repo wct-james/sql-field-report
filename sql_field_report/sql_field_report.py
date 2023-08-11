@@ -47,37 +47,41 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
     Returns:
         pl.DataFrame: Table data
     """
-    # get number of rows
-    counts = (
-        cx.read_sql(cnx, f"SELECT COUNT(*) [c] FROM {table}", return_type="polars")
-        .select(pl.col("c"))
-        .to_series()
-        .to_list()[0]
-    )
-    logger.info(f"Table {table} has: {counts} rows...")
-
-    # get columns with valid datatypes
-    t = table.split("].[")[1][:-1]
-    cols = (
-        cx.read_sql(
-            cnx,
-            f"SELECT DISTINCT('[' + COLUMN_NAME + ']') [COLUMN_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{t}' AND DATA_TYPE != 'sql_variant'",
-            return_type="polars",
+    try:
+        # get number of rows
+        counts = (
+            cx.read_sql(cnx, f"SELECT COUNT(*) [c] FROM {table}", return_type="polars")
+            .select(pl.col("c"))
+            .to_series()
+            .to_list()[0]
         )
-        .select(pl.col("COLUMN_NAME"))
-        .to_series()
-        .to_list()
-    )
+        logger.info(f"Table {table} has: {counts} rows...")
 
-    columns = ", ".join(cols)
+        # get columns with valid datatypes
+        t = table.split("].[")[1][:-1]
+        cols = (
+            cx.read_sql(
+                cnx,
+                f"SELECT DISTINCT('[' + COLUMN_NAME + ']') [COLUMN_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{t}' AND DATA_TYPE != 'sql_variant'",
+                return_type="polars",
+            )
+            .select(pl.col("COLUMN_NAME"))
+            .to_series()
+            .to_list()
+        )
 
-    if counts > 100000:
-        logger.info(f"Table {table} -- abbreviating to top 50000")
-        query = f"SELECT TOP(50000) {columns} FROM {table}"
-    else:
-        query = f"SELECT {columns} FROM {table}"
-    data = cx.read_sql(cnx, query, return_type="polars")
-    logger.info(f"Table {table} data pulled.")
+        columns = ", ".join(cols)
+
+        if counts > 100000:
+            logger.info(f"Table {table} -- abbreviating to top 50000")
+            query = f"SELECT TOP(50000) {columns} FROM {table}"
+        else:
+            query = f"SELECT {columns} FROM {table}"
+        data = cx.read_sql(cnx, query, return_type="polars")
+        logger.info(f"Table {table} data pulled.")
+    except:
+        logger.error(f"Table {table} data pull failed.")
+        data = pl.from_records(data=[[0]], schema=["ERROR"])
     return data
 
 
