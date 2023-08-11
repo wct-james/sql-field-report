@@ -18,6 +18,13 @@ SQL Field Report is a [polars](https://www.pola.rs/) powered data analysis tool,
 To install use pip:
 `pip install sql-field-report`
 
+To use as a CLI, call "`sql-field-report`" within a virtual environment:
+```bash
+python -m venv venv
+pip install sql-field-report
+venv/scripts/activate
+sql-field-report --help
+```
 ## Usage
 
 SQL Field Report is a [Typer](https://github.com/tiangolo/typer) CLI tool to see the available functions run:
@@ -49,12 +56,35 @@ SQL Field Report can also be used as an importable package in python code:
 ```python
 from sql_field_report import build_dataframe_field_report, read_file
 
-analysis_files = ['file1.xlsx', 'file2.xlsx']
+analysis_files = ["file1.xlsx", "file2.xlsx"]
 
 build_dataframe_field_report(
-    "Field_Report.xlsx,
+    "Field_Report.xlsx",
     analysis_files,
     read_file,
 )
 
+```
+
+```python
+import uuid
+from os import getenv, listdir, remove
+from os.path import join
+
+from dotenv import load_dotenv
+
+from sql_field_report.sql_field_report import MSSQL_Database_Report
+
+load_dotenv()
+
+file = f"Test_Report{str(uuid.uuid4())}.xlsx"
+MSSQL_Database_Report(
+    getenv("SERVER"),
+    getenv("PORT"),
+    getenv("USER"),
+    getenv("SQL_SERVER_PASSWORD"),
+    getenv("DATABASE"),
+    "dbo",
+    file,
+)
 ```
