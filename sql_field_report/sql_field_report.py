@@ -68,7 +68,6 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
         .to_series()
         .to_list()
     )
-    print(cols)
 
     columns = ", ".join(cols)
 
