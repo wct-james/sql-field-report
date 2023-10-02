@@ -14,15 +14,17 @@ load_dotenv()
 def test_polars_report():
     files = list([os.path.join("data", i) for i in os.listdir("data")])
 
-    build_dataframe_field_report(
+    result = build_dataframe_field_report(
         os.path.join("test_output", "Field_Report.xlsx"), files, read_file
     )
+
+    assert result != ""
 
 
 def test_sql_report():
     with MSSQLConnection(
         os.getenv("SERVER"),
-        os.getenv("PORT"),
+        int(os.getenv("PORT")),
         os.getenv("USER"),
         os.getenv("SQL_SERVER_PASSWORD"),
         os.getenv("DATABASE"),

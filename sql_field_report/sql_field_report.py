@@ -9,7 +9,7 @@ import typer
 from sqlalchemy import Connection, text
 
 from .utils.analysis import analyze_polars_dataframes, analyze_sql_tables
-from .utils.databases import MSSQLConnection, MSSQLConnectionX, MySQLConnection
+from .utils.databases import MSSQLConnectionX, MySQLConnection
 from .utils.excel import generate_excel_report
 
 

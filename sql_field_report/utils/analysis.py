@@ -1,12 +1,14 @@
 import logging
-import traceback
-from typing import Callable
+from typing import Callable, Union
 
 import pandas as pd
 import polars as pl
 import regex as re
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
+
+import sql_field_report.constants.datatypes as dtypes
+import sql_field_report.constants.field_report_schema as schema
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +20,9 @@ def most_common(lst):
     return max(set(lst), key=lst.count)
 
 
-def estimate_dealcloud_datatype(value, choice_flag):
+def estimate_crm_datatype(value, choice_flag):
     """
-    Estimate the DealCloud datatype of a particular value
+    Estimate the datatype of a particular value
 
     Params:
     value
@@ -35,32 +37,32 @@ def estimate_dealcloud_datatype(value, choice_flag):
     date_regex = r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|\d{2,4}-\d{2}-\d{2,4}|\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d{3}|\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}|\d{2,4}\/\d{2}\/\d{2,4})"
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 
-    if choice_flag:
-        return "Choice/Reference"
-    elif re.search(dc_number_regex, value):
+    if re.search(dc_number_regex, value):
         # test if it is a DealCloud number field
         currency_indicators = ["m", "M", "bn", "B", "£", "$", "€", "GBP", "USD", "EUR"]
         if bool(
             [indicator for indicator in currency_indicators if (indicator in value)]
         ):
-            return "Currency"
+            return dtypes.CURRENCY
         elif "%" in value:
-            return "Percentage"
+            return dtypes.PERCENTAGE
         elif "x" in value.lower():
-            return "Multiplier"
+            return dtypes.MULTIPLIER
         else:
-            return "Number"
+            return dtypes.NUMBER
     else:
         if value == "" or value == " ":
-            return "EMPTY"
+            return dtypes.EMPTY
         elif re.search(email_regex, value):
-            return "E-mail"
+            return dtypes.EMAIL
         elif re.search(date_regex, value):
-            return "Date and Time"
-        elif len(value) < 125:
-            return "Single Line"
-        elif len(value) > 125:
-            return "Multi Line"
+            return dtypes.DATETIME
+        elif len(value) > dtypes.MULTI_LINE_THRESHOLD:
+            return dtypes.MULTI_LINE
+        elif choice_flag:
+            return dtypes.CHOICE_REFERENCE
+        elif len(value) < dtypes.MULTI_LINE_THRESHOLD:
+            return dtypes.SINGLE_LINE
         else:
             return None
 
@@ -116,14 +118,16 @@ def get_sql_polars(arg: tuple[str, Connection]) -> pl.DataFrame:
     return data
 
 
+# noinspection PyArgumentList
 def analyze_data(
-    table: str, get_data: Callable[[str], pl.DataFrame], cnx: str = None
-) -> tuple:
+    table: Union[str, tuple], get_data: Callable[[str], pl.DataFrame], cnx: str = None
+) -> list[tuple]:
     """Analyze data
 
     Args:
         table (str): the object/table name - will be passed to the get_data function
         get_data (Callable[[str], pl.DataFrame]):  A function that will take in a table name and return a Dataframe
+        cnx (object): ConnectorX Connection object
 
     Returns:
         tuple: A tuple describing the shape of the data
@@ -183,32 +187,46 @@ def analyze_data(
             choice_flag = get_choice_flag(unique, choice_ratio, length)
 
             if populated == 0:
-                datatype = "EMPTY"
+                datatype = dtypes.EMPTY
             else:
                 types = list(
                     [
-                        estimate_dealcloud_datatype(v, choice_flag)
+                        estimate_crm_datatype(v, choice_flag)
                         for v in i.select(pl.col(column)).head().to_series().to_list()
                     ]
                 )
                 datatype = most_common(types)
+            top_five = "; ".join(
+                filter(
+                    lambda x: x is not None,
+                    list(
+                        [
+                            str(x)[:50] if x != "" else None
+                            for x in i.head(6).to_dict(as_series=False).get(column)
+                        ]
+                    ),
+                )
+            )
 
-            # logger.info(
+            choices = ""
+            if datatype == dtypes.CHOICE_REFERENCE:
+                choices = i.select(pl.col(column)).to_dict(as_series=False).get(column)
 
-            #     "Analyzed: {}".format(
-            #         str((table, column, length, populated, unique, datatype))
-            #     )
-            # )
-
-            report.append((table, column, length, populated, unique, datatype))
+            report.append(
+                (table, column, length, populated, unique, datatype, top_five, choices)
+            )
     else:
         for i in data.columns:
             column = i
             populated = 0
             unique = 0
             datatype = "EMPTY"
+            top_five = ""
+            choices = ""
 
-            report.append((table, column, length, populated, unique, datatype))
+            report.append(
+                (table, column, length, populated, unique, datatype, top_five, choices)
+            )
 
     return report
 
@@ -233,15 +251,7 @@ def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
 
     analysis = pd.DataFrame(
         data=data_shapes,
-        columns=[
-            "Table/File",
-            "Field",
-            "Count",
-            "Populated",
-            "Unique",
-            "Datatype",
-            # "Choices",
-        ],
+        columns=schema.FIELD_REPORT_SCHEMA,
     )
 
     return analysis
@@ -268,15 +278,7 @@ def analyze_polars_dataframes(
 
     analysis = pd.DataFrame(
         data=data_shapes,
-        columns=[
-            "Table/File",
-            "Field",
-            "Count",
-            "Populated",
-            "Unique",
-            "Datatype",
-            # "Choices",
-        ],
+        columns=schema.FIELD_REPORT_SCHEMA,
     )
 
     return analysis

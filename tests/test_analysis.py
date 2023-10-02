@@ -4,6 +4,8 @@ import uuid
 import polars as pl
 
 from sql_field_report import build_dataframe_field_report
+from sql_field_report.utils.analysis import analyze_data
+from sql_field_report.utils.file_utils import read_file
 
 
 def get_data(name: str) -> pl.DataFrame:
@@ -25,3 +27,10 @@ def test_analyse():
     assert file in os.listdir("test_output")
 
     os.remove(os.path.join("test_output", file))
+
+
+def test_analyze_data():
+    analysis = analyze_data(
+        r"data\Account.csv",
+        read_file,
+    )
