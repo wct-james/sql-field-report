@@ -4,8 +4,8 @@ import uuid
 import polars as pl
 
 from sql_field_report import build_dataframe_field_report
-from sql_field_report.utils.file_utils import read_file
 from sql_field_report.utils.analysis import analyze_data
+from sql_field_report.utils.file_utils import read_file
 
 
 def get_data(name: str) -> pl.DataFrame:

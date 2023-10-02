@@ -1,16 +1,15 @@
 import logging
-
-import pandas as pd
 import os
-import regex as re
 import traceback
 
-from openpyxl.styles import Alignment, PatternFill, Font, Border, Side
+import pandas as pd
+import regex as re
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-import sql_field_report.constants.illegal_chars as illegal_chars
 import sql_field_report.constants.field_report_schema as schema
+import sql_field_report.constants.illegal_chars as illegal_chars
 
 logger = logging.getLogger(__name__)
 
