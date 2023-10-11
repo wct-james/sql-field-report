@@ -1,7 +1,7 @@
 # SQL Field Report
 Author: [Will James](https://github.com/wct-james)
 
-[![Downloads](https://static.pepy.tech/badge/sql-field-report)](https://pepy.tech/project/sql-field-report)
+[![Downloads](https://static.pepy.tech/badge/sql-field-report)](https://pepy.tech/project/sql-field-report) ![Pipeline](https://github.com/wct-james/sql-field-report/actions/workflows/push.yml/badge.svg)
 
 ## About
 SQL Field Report is a [polars](https://www.pola.rs/) powered data analysis tool, which summarises the schema of a given dataset. This can be a series of flat files (excel/csv) or tables in a database. It returns a table of analysis with the following columns:
