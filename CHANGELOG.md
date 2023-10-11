@@ -1,3 +1,13 @@
+## 1.2.0 (2023-10-11)
+
+### Feat
+
+- **dataframe_reports**: add ability to pass kwargs to get_data function
+
+### Fix
+
+- **sql_field_report.py**: catch failed sql queries
+
 ## 1.0.19 (2023-08-11)
 
 ### Fix
