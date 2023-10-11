@@ -120,7 +120,10 @@ def get_sql_polars(arg: tuple[str, Connection]) -> pl.DataFrame:
 
 # noinspection PyArgumentList
 def analyze_data(
-    table: Union[str, tuple], get_data: Callable[[str], pl.DataFrame], cnx: str = None
+    table: Union[str, tuple],
+    get_data: Callable[[str], pl.DataFrame],
+    cnx: str = None,
+    **kwargs,
 ) -> list[tuple]:
     """Analyze data
 
@@ -135,9 +138,9 @@ def analyze_data(
     logger.info(f"Analysing {table}...")
     res = []
     if cnx:
-        data = get_data(table, cnx)
+        data = get_data(table, cnx, **kwargs)
     else:
-        data = get_data(table)
+        data = get_data(table, **kwargs)
     if isinstance(table, tuple):
         table = table[0]
     length = data.shape[0]
@@ -258,7 +261,7 @@ def analyze_sql_tables(objects: list, conn: Connection) -> pd.DataFrame:
 
 
 def analyze_polars_dataframes(
-    objects: list, get_data: Callable[[str], pl.DataFrame], cnx: str = None
+    objects: list, get_data: Callable[[str], pl.DataFrame], cnx: str = None, **kwargs
 ) -> pd.DataFrame:
     """
     Analyze Files
@@ -271,7 +274,7 @@ def analyze_polars_dataframes(
     pd.DataFrame: analysis - a summary of all files, fields and their row counts
     """
 
-    data_shapes = tuple(analyze_data(l, get_data, cnx) for l in objects)
+    data_shapes = tuple(analyze_data(l, get_data, cnx, **kwargs) for l in objects)
 
     # flatten tuple
     data_shapes = tuple((element for t in data_shapes for element in t))

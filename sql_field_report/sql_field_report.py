@@ -90,6 +90,7 @@ def build_dataframe_field_report(
     objects: list,
     get_data: Callable[[str], pl.DataFrame],
     cnx: str = None,
+    **kwargs,
 ):
     """Build DataFrames Field Report
 
@@ -102,7 +103,7 @@ def build_dataframe_field_report(
         str: SQL Report filepath
     """
 
-    analysis = analyze_polars_dataframes(objects, get_data, cnx)
+    analysis = analyze_polars_dataframes(objects, get_data, cnx, **kwargs)
 
     path = generate_excel_report(analysis, output_file_name)
 
