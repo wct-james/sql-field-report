@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from sql_field_report import build_dataframe_field_report, build_sql_field_report
 from sql_field_report.utils.databases import MSSQLConnection
-from sql_field_report.utils.file_utils import read_file, check_encoding
+from sql_field_report.utils.file_utils import check_encoding, read_file
 
 load_dotenv()
 
