@@ -29,4 +29,4 @@ def read_file(file: str) -> pl.DataFrame:
         encoding = check_encoding(file)
         return pl.read_csv(file, encoding=encoding, infer_schema_length=0)
     else:
-        return pl.read_excel(file)
+        return pl.read_excel(file, read_csv_options={"infer_schema_length": 0})

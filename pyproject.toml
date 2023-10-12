@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sql-field-report"
-version = "1.2.2"
+version = "1.2.3"
 description = ""
 authors = ["Will James <willj@dealcloud.com>"]
 readme = "README.md"
