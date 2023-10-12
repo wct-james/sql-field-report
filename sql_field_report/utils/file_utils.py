@@ -27,6 +27,6 @@ def read_file_pandas(file: str) -> pd.DataFrame:
 def read_file(file: str) -> pl.DataFrame:
     if file.endswith(".csv"):
         encoding = check_encoding(file)
-        return pl.read_csv(file, encoding=encoding, infer_schema_length=1000000)
+        return pl.read_csv(file, encoding=encoding, infer_schema_length=0)
     else:
         return pl.read_excel(file)
