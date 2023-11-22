@@ -1,3 +1,9 @@
+## 1.2.4 (2023-11-22)
+
+### Fix
+
+- **pyproject.toml**: update pyarrow
+
 ## 1.2.0 (2023-10-11)
 
 ### Feat
