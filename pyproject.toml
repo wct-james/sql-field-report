@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "sql_field_report"}]
 
 [tool.poetry.dependencies]
-python = "3"
+python = "^3"
 pandas = "^2.1.1"
 openpyxl = "^3.1.2"
 sqlalchemy = "^2.0.11"
