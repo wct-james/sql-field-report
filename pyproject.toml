@@ -8,7 +8,7 @@ packages = [{include = "sql_field_report"}]
 
 [tool.poetry.dependencies]
 python = "3.10.*"
-pandas = "^1.5.3"
+pandas = "^2.1.1"
 openpyxl = "^3.1.2"
 sqlalchemy = "^2.0.11"
 python-dotenv = "^1.0.0"
@@ -22,12 +22,11 @@ faust-cchardet = "^2.1.18"
 polars = "^0.18.3"
 xlsx2csv = "^0.8.1"
 pyarrow = "14.0.1"
-connectorx = "^0.3.1"
+connectorx = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-commitizen = "^3.6.0"
+black = "^24.4.0"
 isort = "^5.12.0"
 
 [tool.isort]
@@ -36,13 +35,6 @@ profile = "black"
 [tool.poetry.scripts]
 sql-field-report = "sql_field_report.sql_field_report:app"
 
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-tag_format = "$version"
-version_scheme = "semver"
-version_provider = "poetry"
-update_changelog_on_bump = true
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

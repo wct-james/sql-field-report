@@ -1,5 +1,6 @@
 import logging
 from typing import Callable
+import traceback
 
 import coloredlogs
 import connectorx as cx
@@ -79,7 +80,9 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
             query = f"SELECT {columns} FROM {table}"
         data = cx.read_sql(cnx, query, return_type="polars")
         logger.info(f"Table {table} data pulled.")
-    except:
+    except Exception as e:
+        traceback.print_exc()
+        logger.error(e)
         logger.error(f"Table {table} data pull failed.")
         data = pl.from_records(data=[[0]], schema=["ERROR"])
     return data

@@ -1,4 +1,5 @@
 from sqlalchemy import URL, create_engine
+from urllib.parse import quote_plus
 
 
 class DBConnection(object):
@@ -71,7 +72,7 @@ class MSSQLConnectionX(DBConnection):
     """
 
     def __enter__(self):
-        self.connection_string = f"mssql://{self._user}:{self._password}@{self._server}:{self._port}/{self._db_name}"
+        self.connection_string = f"mssql://{self._user}:{quote_plus(self._password)}@{self._server}:{self._port}/{self._db_name}"
 
         return self.connection_string
 
