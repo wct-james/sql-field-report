@@ -1,4 +1,5 @@
 """Contains datatype definitions, so that the display value can easily be changed"""
+
 CHOICE_REFERENCE = "Choice/Reference"
 CURRENCY = "Currency"
 PERCENTAGE = "Percentage"

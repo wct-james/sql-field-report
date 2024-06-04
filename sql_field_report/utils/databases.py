@@ -1,5 +1,6 @@
-from sqlalchemy import URL, create_engine
 from urllib.parse import quote_plus
+
+from sqlalchemy import URL, create_engine
 
 
 class DBConnection(object):

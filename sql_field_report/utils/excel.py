@@ -191,38 +191,38 @@ def generate_excel_report(analysis: pd.DataFrame, file_path: str) -> str:
                         mapping_table_count, schema.OPTIONS_COL_IDX
                     )
 
-                    choice_sheet[
-                        f"{get_column_letter(options_col)}1"
-                    ].value = f"{choice_field}- Options"
+                    choice_sheet[f"{get_column_letter(options_col)}1"].value = (
+                        f"{choice_field}- Options"
+                    )
                     choice_sheet[f"{get_column_letter(options_col)}1"].font = Font(
                         bold=True
                     )
-                    choice_sheet[
-                        f"{get_column_letter(options_col)}1"
-                    ].border = thin_border
-                    choice_sheet[
-                        f"{get_column_letter(options_col)}2"
-                    ].value = f"{{Insert CRM Options Here}}"
+                    choice_sheet[f"{get_column_letter(options_col)}1"].border = (
+                        thin_border
+                    )
+                    choice_sheet[f"{get_column_letter(options_col)}2"].value = (
+                        f"{{Insert CRM Options Here}}"
+                    )
 
                     choice_sheet.column_dimensions[
                         get_column_letter(start_col)
                     ].width = "30"
 
-                    choice_sheet.column_dimensions[
-                        get_column_letter(end_col)
-                    ].width = "30"
+                    choice_sheet.column_dimensions[get_column_letter(end_col)].width = (
+                        "30"
+                    )
 
                     choice_sheet.column_dimensions[
                         get_column_letter(options_col)
                     ].width = "30"
 
                     for row in range(mapping_table.shape[0] + 1):
-                        choice_sheet[
-                            f"{get_column_letter(start_col)}{row+1}"
-                        ].fill = even_fill
-                        choice_sheet[
-                            f"{get_column_letter(end_col)}{row+1}"
-                        ].fill = even_fill
+                        choice_sheet[f"{get_column_letter(start_col)}{row+1}"].fill = (
+                            even_fill
+                        )
+                        choice_sheet[f"{get_column_letter(end_col)}{row+1}"].fill = (
+                            even_fill
+                        )
                         choice_sheet[
                             f"{get_column_letter(options_col)}{row+1}"
                         ].fill = gold_fill

@@ -1,6 +1,6 @@
 import logging
-from typing import Callable
 import traceback
+from typing import Callable
 
 import coloredlogs
 import connectorx as cx
