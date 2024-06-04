@@ -151,7 +151,7 @@ def analyze_data(
                 data.select(pl.col(i).value_counts(sort=True)).select(
                     [
                         pl.col(i).struct.field(i),
-                        pl.col(i).struct.field("counts"),
+                        pl.col(i).struct.field("count"),
                     ]
                 )
             )
@@ -161,23 +161,23 @@ def analyze_data(
             if i.dtypes[0] == pl.Utf8:
                 e = i.filter(
                     (pl.col(column) == "") | (pl.col(column).is_null())
-                ).select(pl.col("counts"))
+                ).select(pl.col("count"))
                 if e.shape[0] > 0:
-                    empty = e.rows(named=True)[0].get("counts")
+                    empty = e.rows(named=True)[0].get("count")
                 else:
                     empty = 0
             elif i.dtypes[0] in pl.INTEGER_DTYPES or i.dtypes[0] in pl.FLOAT_DTYPES:
                 e = i.filter(pl.col(column).is_null() | pl.col(column).is_nan()).select(
-                    pl.col("counts")
+                    pl.col("count")
                 )
                 if e.shape[0] > 0:
-                    empty = e.rows(named=True)[0].get("counts")
+                    empty = e.rows(named=True)[0].get("count")
                 else:
                     empty = 0
             else:
-                e = i.filter(pl.col(column).is_null()).select(pl.col("counts"))
+                e = i.filter(pl.col(column).is_null()).select(pl.col("count"))
                 if e.shape[0] > 0:
-                    empty = e.rows(named=True)[0].get("counts")
+                    empty = e.rows(named=True)[0].get("count")
                 else:
                     empty = 0
             populated = length - empty

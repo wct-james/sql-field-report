@@ -3,7 +3,6 @@ import traceback
 from typing import Callable
 
 import coloredlogs
-import connectorx as cx
 import pandas as pd
 import polars as pl
 import typer
