@@ -12,16 +12,16 @@ pandas = "^2.1.1"
 openpyxl = "^3.1.2"
 sqlalchemy = "^2.0.11"
 python-dotenv = "^1.0.0"
-regex = "^2023.3.23"
-pyodbc = "^4.0.39"
-typer = {extras = ["all"], version = "^0.7.0"}
+regex = "^2024.5"
+pyodbc = "^5.1.0"
+typer = {extras = ["all"], version = "^0.12.0"}
 coloredlogs = "^15.0.1"
 mysql-connector-python = "^8.0.33"
-pytest = "^7.3.2"
+pytest = "^8.2"
 faust-cchardet = "^2.1.18"
 polars = "^0.20"
 xlsx2csv = "^0.8.1"
-pyarrow = "14.0.1"
+pyarrow = "^16.1"
 connectorx = "^0.3.3"
 
 [tool.poetry.group.dev.dependencies]
