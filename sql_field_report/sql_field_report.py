@@ -51,7 +51,7 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
     try:
         # get number of rows
         counts = (
-            cx.read_sql(cnx, f"SELECT COUNT(*) [c] FROM {table}", return_type="polars")
+            pl.read_database_uri(f"SELECT COUNT(*) [c] FROM {table}", cnx)
             .select(pl.col("c"))
             .to_series()
             .to_list()[0]
@@ -61,10 +61,9 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
         # get columns with valid datatypes
         t = table.split("].[")[1][:-1]
         cols = (
-            cx.read_sql(
-                cnx,
+            pl.read_database_uri(
                 f"SELECT DISTINCT('[' + COLUMN_NAME + ']') [COLUMN_NAME] FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{t}' AND DATA_TYPE != 'sql_variant'",
-                return_type="polars",
+                cnx,
             )
             .select(pl.col("COLUMN_NAME"))
             .to_series()
@@ -78,7 +77,7 @@ def get_mssql_data(table: str, cnx: str) -> pl.DataFrame:
             query = f"SELECT TOP(50000) {columns} FROM {table}"
         else:
             query = f"SELECT {columns} FROM {table}"
-        data = cx.read_sql(cnx, query, return_type="polars")
+        data = pl.read_database_uri(query, cnx)
         logger.info(f"Table {table} data pulled.")
     except Exception as e:
         traceback.print_exc()
@@ -160,8 +159,7 @@ def MSSQL_Database_Report(
 
     with MSSQLConnectionX(server, port, user, password, database_name) as cnx:
         objects = (
-            cx.read_sql(
-                cnx,
+            pl.read_database_uri.read_sql(
                 f"""
 SELECT DISTINCT
 	('[' + s.name + '].[' + t.name + ']') [TABLE_NAME]
@@ -177,7 +175,7 @@ WHERE
     AND t.is_ms_shipped = 0
     AND p.rows != 0
                 """,
-                return_type="polars",
+                uri=cnx,
             )
             .select(pl.col("TABLE_NAME"))
             .to_series()

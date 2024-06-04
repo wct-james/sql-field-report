@@ -20,7 +20,7 @@ def test_cnx():
         os.getenv("SQL_SERVER_PASSWORD"),
         os.getenv("DATABASE"),
     ) as cnx:
-        get_mssql_data("Contact_Document", cnx)
+        get_mssql_data("[dbo].[Contact_Document]", cnx)
 
 
 def test_analysis():

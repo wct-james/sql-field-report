@@ -72,7 +72,7 @@ class MSSQLConnectionX(DBConnection):
     """
 
     def __enter__(self):
-        self.connection_string = f"mssql://{self._user}:{quote_plus(self._password)}@{self._server}:{self._port}/{self._db_name}"
+        self.connection_string = f"mssql://{self._user}:{quote_plus(self._password)}@{self._server}:{self._port}/{self._db_name}?driver=SQL+Server&trusted_connection=no"
 
         return self.connection_string
 
