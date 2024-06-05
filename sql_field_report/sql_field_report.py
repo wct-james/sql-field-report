@@ -158,7 +158,7 @@ def MSSQL_Database_Report(
 
     with MSSQLConnectionX(server, port, user, password, database_name) as cnx:
         objects = (
-            pl.read_database_uri.read_sql(
+            pl.read_database_uri(
                 f"""
 SELECT DISTINCT
 	('[' + s.name + '].[' + t.name + ']') [TABLE_NAME]
